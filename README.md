@@ -1,15 +1,30 @@
 # JetPhotos API
 
-Unofficial **free** API for [JetPhotos.com](https://www.jetphotos.com) aircraft photo search.
+Unofficial **free** self-hosted API for [JetPhotos.com](https://www.jetphotos.com) aircraft photo search.
 
 Returns structured JSON for registration / aircraft / airline / photographer searches.
 
+> **No paid scraper keys required.**  
+> Run it on your computer or a VPS with `npm start`.
+
+## Status
+
+| Check | Result |
+|-------|--------|
+| Local self-host (`npm start`) | Works |
+| Paid proxy required | No |
+| Cloudflare Workers edge deploy (`npm run deploy`) | Often blocked by JetPhotos (`403`) |
+
+Verified locally against a live JetPhotos search (`Boeing 747`) returning photo JSON with `meta.free: true` and `meta.mode: "workerd-direct"`.
+
 ## Free by design
 
-This project does **not** require ScrapingBee, ZenRows, ScraperAPI, or any paid proxy.
+JetPhotos is Cloudflare-protected. Direct scrapes from Cloudflare’s edge (and many plain `curl`/Node fetches) get `403 Forbidden`.
+
+This project’s free path is:
 
 ```text
-Client → this API (on your PC or VPS) → JetPhotos HTML → JSON
+Client → this API on your PC/VPS (Wrangler/workerd) → JetPhotos HTML → JSON
 ```
 
 | Where you run it | Free? | Usually works? | Notes |
@@ -18,16 +33,22 @@ Client → this API (on your PC or VPS) → JetPhotos HTML → JSON
 | **VPS** | VPS may cost money | maybe | Some datacenter IPs get Cloudflare `403`. Test first. |
 | **Cloudflare Workers edge deploy** | yes | often **no** | JetPhotos blocks many Worker edge requests. |
 
-### Why not plain Node `fetch()` / curl?
+### Why Wrangler instead of plain Node?
 
 On the same home network:
 
 - plain `curl` / Node `fetch` → often Cloudflare **403**
 - this app via **Wrangler/workerd** → often **works**
 
-So the free server runtime is **Wrangler** (`workerd`), not a raw Node HTTP scraper.
+So the free server runtime is **Wrangler** (`workerd`), not a raw Node HTTP scraper and not a paid proxy.
 
 ---
+
+## Requirements
+
+- Node.js 18+
+- npm
+- Network access to `www.jetphotos.com`
 
 ## Quick start (local, free)
 
@@ -38,17 +59,17 @@ npm install
 npm start
 ```
 
-In another terminal:
+Leave that terminal running. In another terminal:
 
 ```bash
+# health
 curl -s http://127.0.0.1:8787/health | jq .
 
-curl -s "http://127.0.0.1:8787/?page=1&sort-order=0&keywords=Boeing%20747&keywords-type=aircraft&keywords-contain=3" | jq '{count, mode: .meta.mode, first: .photos[0].registration}'
-```
+# sample search
+curl -s "http://127.0.0.1:8787/?page=1&sort-order=0&keywords=Boeing%20747&keywords-type=aircraft&keywords-contain=3" \
+  | jq '{count, free: .meta.free, mode: .meta.mode, first: .photos[0].registration}'
 
-Or:
-
-```bash
+# automated smoke test
 npm run test:api
 ```
 
@@ -57,16 +78,19 @@ npm run test:api
 ```json
 {
   "count": 52,
+  "free": true,
   "mode": "workerd-direct",
   "first": "N452PA"
 }
 ```
 
-API base URL while running locally:
+Local base URL:
 
 ```text
 http://127.0.0.1:8787
 ```
+
+If health works but search returns `403`, your current IP is blocked by JetPhotos/Cloudflare. Try another network or VPS IP.
 
 ---
 
@@ -243,6 +267,13 @@ curl -s "https://jetphotos-api.<your-subdomain>.workers.dev/?page=1&keywords=Boe
 If that happens, use **local** or **VPS** hosting instead. The code is the same; only the network path changes.
 
 There is no free reliable way to scrape JetPhotos from Workers edge alone.
+
+#### Recommended production setup
+
+1. Run this API on a home machine or VPS where `npm start` returns photos
+2. Put a reverse proxy or tunnel in front for HTTPS
+3. Point your app at that URL
+4. Skip edge deploy unless you confirm it works for your account/region
 
 ---
 
