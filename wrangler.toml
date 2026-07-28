@@ -1,8 +1,15 @@
 name = "jetphotos-api"
 main = "worker.js"
-compatibility_date = "2024-01-01"
-
-[env.production]
-name = "jetphotos-api"
-route = ""
+compatibility_date = "2024-11-01"
 workers_dev = true
+
+# Free self-host:
+#   npm install
+#   npm start
+# Then open http://127.0.0.1:8787/health
+#
+# Edge deploy (optional, often blocked by JetPhotos):
+#   npm run deploy
+
+[vars]
+CACHE_TTL_SECONDS = "21600"

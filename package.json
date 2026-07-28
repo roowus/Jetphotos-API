@@ -1,0 +1,20 @@
+{
+  "name": "jetphotos-api",
+  "version": "2.0.0",
+  "description": "Unofficial free self-hosted JetPhotos.com photo search API",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev --ip 0.0.0.0 --port 8787",
+    "dev": "wrangler dev --ip 127.0.0.1 --port 8787",
+    "deploy": "wrangler deploy",
+    "test:api": "node scripts/smoke-test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.114.0"
+  }
+}

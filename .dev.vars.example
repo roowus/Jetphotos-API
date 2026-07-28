@@ -1,0 +1,3 @@
+# No secrets required for the free self-hosted setup.
+# Optional override:
+# CACHE_TTL_SECONDS=21600
